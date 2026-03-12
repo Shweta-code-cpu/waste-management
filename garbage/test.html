@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garbage Collection Monitoring</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css">
+  <link rel="shortcut icon" type="image/x-icon" class="fabicon" href="/logo/trash_truck.jpg" />
+
+<style>
+    /* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f551;
+    color: #333;
+  }
+  
+  /* Header */
+  .header {
+    background-color: #3c7217de;
+    color: white;
+    /* padding: 8px 13px;*/
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap; /* Ensures items wrap on smaller screens */
+  }
+  
+  .header h1 {
+        font-size: 34px;
+        margin: 0px;
+        position: absolute;
+        left: 37%;
+        top: 1%;
+  }
+  
+  .header img {
+    height: 50px;
+    margin-right: 15px;
+  }
+
+  .header span {
+    font-size: 1rem;
+    font-weight: bold;
+  }
+
+/*---------- tabs styling----------*/
+   /* Tabs Section */
+   .tabs {
+    display: flex;
+    background-color: #f0f0f0;
+    border-bottom: 2px solid #ccc;
+    justify-content: flex-start;
+   /* padding-left: 20px; */
+  }
+
+  .tab-btn {
+    padding: 4px 10px;
+    /* margin: 0px 0px 0 0; */
+    background-color: #e8e8e8;
+    border: 1px solid #d4d4d4;
+    /* border-radius: 5px 6px 5px 5px; */
+    font-size: 13px;
+    /* font-weight: bold; */
+    cursor: pointer;
+    color: #333;
+}
+  
+
+  .tab-btn:hover {
+    background-color: #d4d4d4;
+  }
+
+  .tab-btn.active {
+    background-color: #ffffff;
+    border: 2px solid #ccc;
+    border-bottom: none;
+    font-weight: bold;
+    color: #2c662d;
+  }
+
+  /* Tab Content 
+  .tab-content {
+    padding: 20px;
+    border: 2px solid #ccc;
+    border-top: none;
+  } */
+
+/*----------- main container css--------------*/
+  .container {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 70px);
+    gap: 5px;
+    padding: 8px;
+  }
+  
+  .left-panel, .right-panel {
+    background-color:#f0ebeb;
+    border-radius: 8px;
+    box-shadow: 0 1px 8px rgb(86 83 83 / 74%);
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  .left-panel {
+    flex: 3;
+  }
+
+  .right-panel {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content:flex-start;
+  }
+
+  
+ /*---------- Map-------------- */
+ .map {
+  height: 70%;
+  background-color: #ddd;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  overflow: hidden;
+  border:black;
+  box-shadow: 0 4px 8px rgba(2, 2, 2, 0.1);
+}
+ 
+/*----------- Buttons------------ */
+    .btn {
+      background-color:#3c7217de;
+      color: white;
+      padding: 8px 14px;
+      margin: 5px 5px 15px 0;
+      border:none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .button-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        margin-top: 10px;
+        gap: 10px;
+      }
+
+      
+      .view-btn {
+        background-color:#3c7217de;
+        color: white;
+        padding: 5px 10px;
+        margin: 5px 5px 0 0;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .selection-field select {
+        padding: 7px 12px;
+        margin-top: -7px;
+      /*  font-size: 14px; */
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color:#3c7217de;
+        cursor: pointer;
+        color:#f9f9f9;
+    }
+    
+    #actions-select option{
+     background-color: #f2f2f2;
+     color:#2a2b2b
+  }
+    .selection-field select:focus {
+        outline: none;
+        border-color: #2a2b2b;
+    }
+
+
+/* Search Bar */
+.search-bar {
+margin-left: 350px;
+margin-top: -12px;
+display: flex;
+align-items: center;
+}
+  
+.search-bar input {
+padding: 8px;
+border: 1px solid #ddd;
+border-radius: 3px;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+margin-left: 7px;
+}
+
+
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      /*margin-top: 15px;*/
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+      padding: 7px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color:#3c7217de;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f2f2f2;
+    }
+
+    /* Route Information */
+    .route-info {
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      font-size: 0.95rem;
+    }
+
+    .route-info h3 {
+      margin-top: 0;
+      color: #3c7217de;
+    }
+
+
+    .info-box {
+      position: fixed;
+      top: 20%;
+      left: 30%;
+      width: 20%;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
+    
+    .info-content {
+      text-align: center;
+    }
+    
+    .close-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .close-btn:hover {
+      background: darkred;
+    }
+    
+
+  /* Scrollable table for small screens */
+  @media screen and (max-width: 768px) {
+    table {
+      display: block; /* Allows table to be scrollable */
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+  
+  /* Responsive Breakpoints */
+  @media screen and (max-width: 1024px) {
+    .container {
+      flex-direction: column; /* Stacks panels vertically */
+    }
+    .left-panel, .right-panel {
+      flex: 1; /* Equal width for stacked panels */
+      height: auto; /* Adjusts height dynamically */
+    }
+    .map {
+      height: 50vh; /* Adjusts map height */
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+    .header h1 {
+      font-size: 1.2rem; /* Smaller font size for small devices */
+    }
+  
+    .header img {
+      height: 30px; /* Adjust logo size */
+    }
+  
+    .btn {
+      font-size: 0.8rem;
+      padding: 5px;
+    }
+  
+    .route-info {
+      font-size: 0.9rem;
+    }
+  }
+  
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div>
+      <img src="/logo/Capture1112.PNG" alt="Logo">
+      <h1>Garbage Collection Monitoring</h1>
+    </div>
+    <div>
+      <img src="/logo/fb nn.png" alt="Logo">
+  </div>
+</div>
+
+ <!-- Full-page Tabs -->
+<div class="tabs">
+  <button class="tab-btn" onclick="showTab('home')">Home</button>
+  <!-- <button class="tab-btn" onclick="showTab('performance-report')">Performance Report</button> -->
+  <!-- <button class="tab-btn" onclick="showTab('tickets')">Tickets</button> -->
+</div>
+
+<!-- Tab Content -->
+<div id="home" class="tab-content">
+<div class="container">
+      <div class="left-panel">
+        <!-- Buttons for Adding/Removing Stops -->
+        <div class="button-group">
+          <!-- <input type="date" id="date-picker" class="btn" value="" title="Select Date"> -->
+
+          <input type="date" id="date-picker" class="btn" value="" placeholder="Select Date">
+          <label for="date-picker" class="btn" style="position:fixed ; pointer-events: none;">Select Date</label>
+
+
+          <!-- <button class="btn" id="add-stop-btn">Add Stop</button> -->
+          <!-- <button class="btn" id="remove-stop-btn">Delete Stops</button> -->
+          <!-- <button class="btn">Actions</button> -->
+          <div class="selection-field">
+            <select id="actions-select">
+                <option value="" disabled selected style="color:gray">Select Zone</option>
+                <option value="all">All</option>
+                <option value="zones">Zone</option>
+                <option value="wards">Wards</option>
+            </select>
+          </div>
+
+          <div class="search-bar">
+            <input type="text" id="search-bar" placeholder="Search...">
+          </div>
+        </div>
+
+          <!-- Table -->
+          <table>
+          <thead>
+              <tr>
+              <th>S.no</th>
+              <th>House no.</th>
+              <th>Resident Name</th>
+              <th>Address</th>
+              <th>Time Stamp</th>
+              <th>Status</th>
+              <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody id="table-body">
+              <!----add data dynamcally----->
+          </tbody>
+          </table>
+      </div>
+
+      <div class="right-panel">
+        <div id="map" class="map"></div>
+
+        <div class="route-info">
+          <h3>Route Information</h3>
+          <p>Schedule Date: 2022-01-03</p>
+          <p>Time: 10:50 - 12:45</p>
+          <p>Duration: 1h 55min</p>
+        </div>
+
+        <div class="info-box" id="info-box" style="display: none;">
+          <div class="info-content">
+            <p id="info-details"></p>
+            <button class="close-btn" id="close-info-btn">Close</button>
+          </div>
+        </div>
+        
+      </div>
+  </div>
+</div>
+
+<div id="performance-report" class="tab-content" style="display: none;">
+  <h2>Performance Report</h2>
+  <p>Details about performance will go here.</p>
+</div>
+
+<!-- <div id="tickets" class="tab-content" style="display: none;">
+  <h2>Tickets</h2>
+  <p>Details about tickets will go here.</p>
+</div> -->
+
+<script src="https://cdn.jsdelivr.net/npm/ol/dist/ol.js"></script>
+<script>
+
+// ========================= GLOBAL VARIABLES =========================
+let allGarbageData = [];       // Holds all fetched data
+let currentDisplayIndex = 0;   // Tracks how many records are currently shown
+const batchSize = 10;          // Number of records to show per batch
+
+// ====================== TAB SWITCHING FUNCTION ======================
+function showTab(tabId) {
+  const contents = document.querySelectorAll('.tab-content');
+  contents.forEach(content => content.style.display = 'none');
+  document.getElementById(tabId).style.display = 'block';
+}
+
+// ====================== OPENLAYERS MAP SETUP ========================
+var view = new ol.View({
+  projection: 'EPSG:4326',
+  center: [78.40560096569789, 27.159972766243083],
+  zoom: 16,
+});
+
+var base_maps = new ol.layer.Group({
+  'title': 'Base maps',
+  layers: [
+    new ol.layer.Tile({
+      title: 'OSM',
+      type: 'base',
+      visible: true,
+      source: new ol.source.OSM()
+    }),
+    new ol.layer.Tile({
+      title: 'CartoDB Positron',
+      type: 'base',
+      visible: false,
+      source: new ol.source.XYZ({
+        url: 'https://{1-4}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+        attributions: '&copy; OpenStreetMap contributors &copy; CARTO'
+      })
+    })
+  ]
+});
+
+var overlays = new ol.layer.Group({ title: 'Overlays', layers: [] });
+
+var map = new ol.Map({
+  target: 'map',
+  view: view,
+});
+map.addLayer(base_maps);
+map.addLayer(overlays);
+
+// ================= LAYER SWITCHER SETUP (Optional) ================
+// Uncomment if you're using LayerSwitcher library
+// var layerSwitcher = new ol.control.LayerSwitcher({ ... });
+// map.addControl(layerSwitcher);
+// layerSwitcher.renderPanel();
+
+// ====================== FETCH DATA FROM SERVER =====================
+async function fetchDynamicData() {
+  try {
+    const response = await fetch("http://192.168.104.122:8889/Ferozabad/getZ1Type", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: "type=Z1"  // 🔁 Replace Z1 with dynamic value if needed
+    });
+
+    const data = await response.json();
+
+    if (data && Array.isArray(data.data)) {
+      allGarbageData = data.data;
+      currentDisplayIndex = 0;
+      document.getElementById("table-body").innerHTML = ""; // Reset table
+     // document.getElementById("add-stop-btn").style.display = "inline-block"; // Show button
+      renderTableBatch();  // Load first 10
+      updateMapMarkers(allGarbageData);  // Update map
+    } else {
+      console.error("Invalid data format:", data);
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+}
+
+
+// =================== RENDER TABLE IN BATCHES ========================
+function renderTableBatch() {
+  const tableBody = document.getElementById("table-body");
+  const endIndex = Math.min(currentDisplayIndex + batchSize, allGarbageData.length);
+
+  for (let i = currentDisplayIndex; i < endIndex; i++) {
+    const stop = allGarbageData[i];
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${stop.house_id || "-"}</td>
+      <td>${stop.resident_name || "-"}</td>
+      <td>${stop.resident_address || "-"}</td>
+      <td>${stop.updated_at ? new Date(stop.updated_at).toLocaleString() : "-"}</td>
+      <td>${stop.status || "-"}</td>
+      <td><button class="view-btn" data-id="${stop.collection_id}">View</button></td>
+    `;
+    tableBody.appendChild(row);
+  }
+
+  currentDisplayIndex = endIndex;
+
+ // if (currentDisplayIndex >= allGarbageData.length) {
+   // const addStopBtn = document.getElementById("add-stop-btn");
+   // if (addStopBtn) addStopBtn.style.display = "none";
+ // }
+}
+
+// ============ FILTER & RENDER DATA BY DATE =============
+function filterDataByDate(selectedDate) {
+  const tableBody = document.getElementById("table-body");
+  tableBody.innerHTML = ""; // Clear previous
+
+  const filteredData = allGarbageData.filter(stop => {
+    if (!stop.updated_at) return false;
+    const recordDate = new Date(stop.updated_at).toISOString().split('T')[0];
+    return recordDate === selectedDate;
+  });
+
+  if (filteredData.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="7">No data for this date</td></tr>`;
+    return;
+  }
+
+  filteredData.forEach((stop, i) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${stop.house_id || "-"}</td>
+      <td>${stop.resident_name || "-"}</td>
+      <td>${stop.resident_address || "-"}</td>
+      <td>${stop.updated_at ? new Date(stop.updated_at).toLocaleString() : "-"}</td>
+      <td>${stop.status || "-"}</td>
+      <td><button class="view-btn" data-id="${stop.collection_id}">View</button></td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const dateInput = document.getElementById("date-picker");
+  const today = new Date().toISOString().split('T')[0];
+  dateInput.value = today;
+});
+
+document.getElementById("date-picker").addEventListener("change", function () {
+  const selectedDate = this.value;
+  filterDataByDate(selectedDate);
+});
+
+
+// ===================== MAP MARKERS FOR GARBAGE ======================
+function updateMapMarkers(data) {
+  const vectorSource = new ol.source.Vector();
+
+  data.forEach(stop => {
+    const feature = new ol.Feature({
+      geometry: new ol.geom.Point(ol.proj.fromLonLat([stop.longitude, stop.latitude])),
+      name: stop.house_no
+    });
+
+    vectorSource.addFeature(feature);
+  });
+
+  const vectorLayer = new ol.layer.Vector({
+    source: vectorSource,
+    style: new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 6,
+        fill: new ol.style.Fill({ color: 'red' }),
+        stroke: new ol.style.Stroke({ color: 'white', width: 2 })
+      })
+    })
+  });
+
+  map.addLayer(vectorLayer);
+}
+
+// ====================== VIEW BUTTON FUNCTIONALITY ====================
+document.getElementById("table-body").addEventListener("click", (event) => {
+  if (event.target.classList.contains("view-btn")) {
+    const stopId = event.target.getAttribute("data-id");
+
+    fetch(`http://192.168.104.122:8889/Ferozabad/getZ1Type?id=${stopId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: "type=Z1"  // 🔁 Replace Z1 with dynamic value if needed
+    })
+      .then(response => response.json())
+      .then(stop => {
+        const infoBox = document.getElementById("info-box");
+        const infoDetails = document.getElementById("info-details");
+
+        infoDetails.innerHTML = `
+        <strong>Stop Details:</strong><br>
+        - House no: ${stop.house_id || "-"}<br>
+        - Resident name: ${stop.resident_name || "-"}<br>
+        - Address: ${stop.resident_address || "-"}<br>
+        - Time Stamp: ${stop.updated_at ? new Date(stop.updated_at).toLocaleString() : "-"}<br>
+        - Status: ${stop.status || "-"}<br>
+        - Phone no: ${stop.mobile || "-"}
+      `;
+      
+        infoBox.style.display = "block";
+      })
+      .catch(error => console.error("Error fetching details:", error));
+  }
+});
+
+// ===================== CLOSE INFO BOX ========================
+document.getElementById("close-info-btn").addEventListener("click", () => {
+  document.getElementById("info-box").style.display = "none";
+});
+
+// ================== ADD STOP BUTTON CLICK ====================
+// document.getElementById("add-stop-btn").addEventListener("click", () => {
+//  renderTableBatch(); 
+//});
+
+// ================== INITIAL LOAD + INTERVAL ===================
+fetchDynamicData();
+// setInterval(fetchDynamicData, 10000);
+
+
+
+
+
+</script>
+
+</body>
+</html>
+

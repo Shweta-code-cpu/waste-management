@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garbage Collection Monitoring</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css">
+  <style>
+
+ /* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f551;
+    color: #333;
+  }
+  
+  /* Header */
+  .header {
+    background-color: #3c7217de;
+    color: white;
+    /* padding: 8px 13px;*/
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap; /* Ensures items wrap on smaller screens */
+  }
+  
+  .header h1 {
+        font-size: 34px;
+        margin: 0px;
+        position: absolute;
+        left: 37%;
+        top: 1%;
+  }
+  
+  .header img {
+    height: 50px;
+    margin-right: 15px;
+  }
+
+  .header span {
+    font-size: 1rem;
+    font-weight: bold;
+  }
+
+/*---------- tabs styling----------*/
+   /* Tabs Section */
+   .tabs {
+    display: flex;
+    background-color: #f0f0f0;
+    border-bottom: 2px solid #ccc;
+    justify-content: flex-start;
+   /* padding-left: 20px; */
+  }
+
+  .tab-btn {
+    padding: 4px 10px;
+    /* margin: 0px 0px 0 0; */
+    background-color: #e8e8e8;
+    border: 1px solid #d4d4d4;
+    /* border-radius: 5px 6px 5px 5px; */
+    font-size: 13px;
+    /* font-weight: bold; */
+    cursor: pointer;
+    color: #333;
+}
+  
+
+  .tab-btn:hover {
+    background-color: #d4d4d4;
+  }
+
+  .tab-btn.active {
+    background-color: #ffffff;
+    border: 2px solid #ccc;
+    border-bottom: none;
+    font-weight: bold;
+    color: #2c662d;
+  }
+
+  /* Tab Content 
+  .tab-content {
+    padding: 20px;
+    border: 2px solid #ccc;
+    border-top: none;
+  } */
+
+/*----------- main container css--------------*/
+  .container {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 70px);
+    gap: 5px;
+    padding: 8px;
+  }
+  
+  .left-panel, .right-panel {
+    background-color:#f0ebeb;
+    border-radius: 8px;
+    box-shadow: 0 1px 8px rgb(86 83 83 / 74%);
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  .left-panel {
+    flex: 3;
+  }
+
+  .right-panel {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content:flex-start;
+  }
+
+  
+ /*---------- Map-------------- */
+ .map {
+  height: 70%;
+  background-color: #ddd;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  overflow: hidden;
+  border:black;
+  box-shadow: 0 4px 8px rgba(2, 2, 2, 0.1);
+}
+ 
+/*----------- Buttons------------ */
+    .btn {
+      background-color:#3c7217de;
+      color: white;
+      padding: 8px 14px;
+      margin: 5px 5px 15px 0;
+      border:none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .button-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 4px;
+        margin-top: 5px;
+        gap: 10px;
+      }
+
+      
+      .view-btn {
+        background-color:#3c7217de;
+        color: white;
+        padding: 5px 10px;
+        margin: 5px 5px 0 0;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .selection-field select {
+        padding: 7px 12px;
+        margin-top: -7px;
+      /*  font-size: 14px; */
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color:#3c7217de;
+        cursor: pointer;
+        color:#f9f9f9;
+    }
+    
+    #actions-select option{
+     background-color: #f2f2f2;
+     color:#2a2b2b
+  }
+    .selection-field select:focus {
+        outline: none;
+        border-color: #2a2b2b;
+    }
+
+
+/* Search Bar */
+.search-bar {
+margin-left: 350px;
+margin-top: -12px;
+display: flex;
+align-items: center;
+}
+  
+.search-bar input {
+padding: 8px;
+border: 1px solid #ddd;
+border-radius: 3px;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+margin-left: 7px;
+}
+
+
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      /*margin-top: 15px;*/
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+      padding: 7px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color:#3c7217de;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f2f2f2;
+    }
+
+    /* Route Information */
+    .route-info {
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      font-size: 0.95rem;
+    }
+
+    .route-info h3 {
+      margin-top: 0;
+      color: #3c7217de;
+    }
+
+
+  /* Scrollable table for small screens */
+  @media screen and (max-width: 768px) {
+    table {
+      display: block; /* Allows table to be scrollable */
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+  
+  /* Responsive Breakpoints */
+  @media screen and (max-width: 1024px) {
+    .container {
+      flex-direction: column; /* Stacks panels vertically */
+    }
+    .left-panel, .right-panel {
+      flex: 1; /* Equal width for stacked panels */
+      height: auto; /* Adjusts height dynamically */
+    }
+    .map {
+      height: 50vh; /* Adjusts map height */
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+    .header h1 {
+      font-size: 1.2rem; /* Smaller font size for small devices */
+    }
+  
+    .header img {
+      height: 30px; /* Adjust logo size */
+    }
+  
+    .btn {
+      font-size: 0.8rem;
+      padding: 5px;
+    }
+  
+    .route-info {
+      font-size: 0.9rem;
+    }
+  }
+  
+   
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+    <div>
+      <img src="/logo/Capture1112.PNG" alt="Logo">
+      <h1>Garbage Collection Monitoring</h1>
+    </div>
+    <div>
+      <img src="/logo/fb nn.png" alt="Logo">
+  </div>
+</div>
+
+ <!-- Full-page Tabs -->
+<div class="tabs">
+  <button class="tab-btn" onclick="showTab('home')">Home</button>
+  <button class="tab-btn" onclick="showTab('performance-report')">Performance Report</button>
+  <button class="tab-btn" onclick="showTab('tickets')">Tickets</button>
+</div>
+
+<!-- Tab Content -->
+<div id="home" class="tab-content">
+<div class="container">
+      <div class="left-panel">
+        <!-- Buttons for Adding/Removing Stops -->
+        <div class="button-group">
+          <button class="btn" id="add-stop-btn">Add Stop</button>
+          <button class="btn" id="remove-stop-btn">Delete Stops</button>
+          <!-- <button class="btn">Actions</button> -->
+          <div class="selection-field">
+            <select id="actions-select">
+                <option value="" disabled selected style="color:gray">Actions</option>
+                <option value="edit">Edit</option>
+                <option value="view">View</option>
+                <option value="delete">Delete</option>
+            </select>
+          </div>
+          <div class="search-bar">
+            <input type="text" id="search-bar" placeholder="Search...">
+          </div>
+        </div>
+
+          <!-- Table -->
+          <table>
+          <thead>
+              <tr>
+              <th><input type="checkbox" id="select-all"></th>
+              <th>House no.</th>
+              <th>Resident Name</th>
+              <th>Address</th>
+              <th>Time Stamp</th>
+              <th>Completed</th>
+              <th>Weight</th>
+              <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody id="table-body">
+              <!----add data dynamcally----->
+          </tbody>
+          </table>
+      </div>
+
+      <div class="right-panel">
+        <div id="map" class="map"></div>
+
+        <div class="route-info">
+          <h3>Route Information</h3>
+          <p>Schedule Date: 2022-01-03</p>
+          <p>Time: 10:50 - 12:45</p>
+          <p>Duration: 1h 55min</p>
+        </div>
+      </div>
+  </div>
+</div>
+
+<div id="performance-report" class="tab-content" style="display: none;">
+  <h2>Performance Report</h2>
+  <p>Details about performance will go here.</p>
+</div>
+
+<div id="tickets" class="tab-content" style="display: none;">
+  <h2>Tickets</h2>
+  <p>Details about tickets will go here.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ol/dist/ol.js"></script>
+<script>
+
+  function showTab(tabId) {
+    // Hide all tab contents
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(content => (content.style.display = 'none'));
+
+    // Show the selected tab content
+    document.getElementById(tabId).style.display = 'block';
+  }
+
+   // Example data for stops
+let stops = [
+{
+  id: 1,
+  stop: 'Depot',
+  arrival: '10:50',
+  location: 'Kirkevej 2, Herning',
+  trigger: 'Static',
+  fillLevel: '50%',
+  weight: '20kg',
+  coordinates: [78.4018, 27.1494]
+},
+{
+  id: 2,
+  stop: '2568',
+  arrival: '11:08',
+  location: 'Bijdarbakkevej 1, Herning',
+  trigger: 'Sensor',
+  fillLevel: '60%',
+  weight: '25kg',
+  coordinates: [78.4076, 27.1494]
+}
+];
+
+// Function to render the table
+function renderTable() {
+const tableBody = document.getElementById('table-body');
+tableBody.innerHTML = '';
+
+stops.forEach((stop, index) => {
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td><input type="checkbox" data-id="${stop.id}"></td>
+    <td>${stop.stop}</td>
+    <td>${stop.arrival}</td>
+    <td>${stop.location}</td>
+    <td>${stop.trigger}</td>
+    <td>${stop.fillLevel}</td>
+    <td>${stop.weight}</td>
+    <td>
+      <button class="view-btn" data-id="${stop.id}">View</button>
+    </td>
+  `;
+  tableBody.appendChild(row);
+});
+}
+// Initialize the map
+  const map = new ol.Map({
+    target: 'map',
+    layers: [
+      // Add OpenStreetMap as the base layer
+      new ol.layer.Tile({
+        source: new ol.source.OSM()
+      })
+    ],
+    view: new ol.View({
+      // Center the map on India (approximately at longitude: 78.9629, latitude: 20.5937)
+      center: ol.proj.fromLonLat([78.4018, 27.1494]),
+      zoom: 12 // Adjust the zoom level to fit India's boundaries
+    })
+  });
+
+// Add markers for stops
+function addStopMarkers() {
+const vectorSource = new ol.source.Vector();
+
+stops.forEach(stop => {
+  const feature = new ol.Feature({
+    geometry: new ol.geom.Point(ol.proj.fromLonLat(stop.coordinates)),
+    name: stop.stop
+  });
+
+  vectorSource.addFeature(feature);
+});
+
+const vectorLayer = new ol.layer.Vector({
+  source: vectorSource,
+  style: new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: 6,
+      fill: new ol.style.Fill({ color: 'red' }),
+      stroke: new ol.style.Stroke({ color: 'white', width: 2 })
+    })
+  })
+});
+
+map.addLayer(vectorLayer);
+}
+
+// Function to handle "View Details" button click
+document.addEventListener('click', event => {
+if (event.target.classList.contains('view-btn')) {
+  const stopId = event.target.getAttribute('data-id');
+  const stop = stops.find(s => s.id == stopId);
+  if (stop) {
+    alert(`Stop Details:\n- Stop: ${stop.stop}\n- Arrival: ${stop.arrival}\n- Location: ${stop.location}`);
+  }
+}
+});
+
+// Add new stop
+document.getElementById('add-stop-btn').addEventListener('click', () => {
+const newStop = {
+  id: stops.length + 1,
+  stop: `Stop ${stops.length + 1}`,
+  arrival: '12:00',
+  location: 'New Location, firozabad',
+  trigger: 'Sensor',
+  fillLevel: '75%',
+  weight: '30kg',
+  coordinates: [78.4046, 27.1494]
+};
+stops.push(newStop);
+renderTable();
+addStopMarkers();
+});
+
+// Remove selected stops
+document.getElementById('remove-stop-btn').addEventListener('click', () => {
+const selectedStops = Array.from(document.querySelectorAll('#table-body input[type="checkbox"]:checked'))
+  .map(checkbox => parseInt(checkbox.getAttribute('data-id')));
+
+stops = stops.filter(stop => !selectedStops.includes(stop.id));
+renderTable();
+map.getLayers().getArray().slice(1).forEach(layer => map.removeLayer(layer)); // Remove existing markers
+addStopMarkers();
+});
+
+// Select/Deselect all rows
+document.getElementById('select-all').addEventListener('change', event => {
+const checkboxes = document.querySelectorAll('#table-body input[type="checkbox"]');
+checkboxes.forEach(checkbox => (checkbox.checked = event.target.checked));
+});
+
+// Initial render
+renderTable();
+addStopMarkers();
+
+</script>
+
+</body>
+</html>
